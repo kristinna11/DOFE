@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>DOFE — Osobná výbava</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    width: 100%;
+    min-height: 100%;
+    overflow-x: hidden;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #f4f6f9;
+    color: #1a1a2e;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+
+  body {
+    min-height: 100vh;
+    padding-bottom: calc(24px + env(safe-area-inset-bottom));
+  }
+
+  .header {
+    background: #1e8c45;
+    color: white;
+    padding: 22px 16px 16px;
+    text-align: center;
+  }
+  .header h1 { font-size: 18px; font-weight: 800; line-height: 1.2; }
+  .header p { font-size: 12px; opacity: 0.9; margin-top: 4px; }
+
+  .name-bar {
+    background: white;
+    border-bottom: 2px solid #1e8c45;
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .name-bar label {
+    font-size: 13px;
+    font-weight: 700;
+    color: #166534;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .name-bar input {
+    flex: 1;
+    min-width: 0;
+    border: none;
+    border-bottom: 1.5px solid #e5e7eb;
+    font-size: 15px;
+    font-weight: 600;
+    color: #1a1a2e;
+    background: transparent;
+    outline: none;
+    padding: 2px 4px;
+    border-radius: 0;
+  }
+  .name-bar input::placeholder { color: #c4c4c4; font-weight: 400; }
+
+  .progress-wrap {
+    padding: 10px 16px 6px;
+    background: white;
+    border-bottom: 1px solid #e5e7eb;
+  }
+  .progress-top {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    font-weight: 700;
+    color: #6b7280;
+    margin-bottom: 5px;
+  }
+  .progress-top span:last-child { color: #1e8c45; }
+  .progress-bar {
+    height: 6px;
+    background: #e5e7eb;
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: #1e8c45;
+    border-radius: 10px;
+    transition: width 0.25s ease;
+    width: 0%;
+  }
+
+  .legend {
+    display: flex;
+    gap: 16px;
+    padding: 8px 16px 12px;
+    background: #f4f6f9;
+    font-size: 11px;
+    font-weight: 600;
+    color: #6b7280;
+    flex-wrap: wrap;
+  }
+  .leg { display: flex; align-items: center; gap: 6px; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .dot.nev { background: #dc2626; }
+  .dot.odp { background: #9ca3af; }
+
+  .section-label {
+    background: #1a5276;
+    color: white;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 7px 16px;
+  }
+
+  .item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 13px 16px;
+    background: white;
+    border-bottom: 1px solid #e5e7eb;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+    touch-action: manipulation;
+  }
+  .item.done { background: #f0fdf4; }
+  .item.done .item-name { color: #9ca3af; text-decoration: line-through; }
+
+  .dot-row { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+  .dot-row.nev { background: #dc2626; }
+  .dot-row.odp { background: #d1d5db; }
+
+  .item-num {
+    font-size: 11px;
+    font-weight: 700;
+    color: #9ca3af;
+    min-width: 22px;
+    text-align: center;
+    flex-shrink: 0;
+  }
+
+  .item-name {
+    flex: 1;
+    min-width: 0;
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 1.35;
+    word-break: break-word;
+  }
+
+  .item input[type="checkbox"] {
+    width: 26px;
+    height: 26px;
+    accent-color: #1e8c45;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+
+  .done-banner {
+    display: none;
+    margin: 20px 16px;
+    background: #1e8c45;
+    color: white;
+    border-radius: 12px;
+    padding: 16px;
+    text-align: center;
+    font-weight: 700;
+    font-size: 15px;
+  }
+  .done-banner.show { display: block; }
+
+  @media (max-width: 420px) {
+    .header { padding-top: 18px; }
+    .header h1 { font-size: 16px; }
+    .name-bar, .progress-wrap, .legend { padding-left: 12px; padding-right: 12px; }
+    .item { padding-left: 12px; padding-right: 12px; }
+    .item-name { font-size: 13px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>👤 DOFE — Osobná výbava</h1>
+  <p>Zaškrtni čo máš zabalené</p>
+</div>
+
+<div class="name-bar">
+  <label>Moje meno:</label>
+  <input type="text" id="meno-input" placeholder="Napíš svoje meno...">
+</div>
+
+<div class="progress-wrap">
+  <div class="progress-top">
+    <span>Zabalené</span>
+    <span id="prog-txt">0 / 33</span>
+  </div>
+  <div class="progress-bar">
+    <div class="progress-fill" id="prog-fill"></div>
+  </div>
+</div>
+
+<div class="legend">
+  <div class="leg"><div class="dot nev"></div> Nevyhnutné</div>
+  <div class="leg"><div class="dot odp"></div> Odporúčané</div>
+</div>
+
+<div id="items-container"></div>
+<div class="done-banner" id="done-banner">🎉 Všetko zabalené! Dobrá práca!</div>
+
+<script>
+const items = [
+  { section: "Oblečenie" },
+  { id:"o1",  num:1,  name:"1 pár turistickej nepremokavej obuvi", nev:true },
+  { id:"o2",  num:2,  name:"Min. 2 páry turistických ponožiek", nev:true },
+  { id:"o3",  num:3,  name:"Min. 2 tričká (funkčné, nie bavlnené)", nev:true },
+  { id:"o4",  num:4,  name:"2 flisové mikiny alebo teplé vrstvy", nev:true },
+  { id:"o5",  num:5,  name:"1 pár nohavíc vhodných na turistiku (nie džínsy)", nev:true },
+  { id:"o6",  num:6,  name:"Teplá čiapka / šiltovka na slnko", nev:true },
+  { id:"o7",  num:7,  name:"Bunda alebo vetrovka (vodo- a vetruodolná)", nev:true },
+  { id:"o8",  num:8,  name:"Pršiplášť", nev:true },
+  { id:"o9",  num:9,  name:"Termoprádlo – tričko a spodky", nev:false },
+  { id:"o10", num:10, name:"Spodná bielizeň", nev:false },
+  { id:"o11", num:11, name:"Oblečenie na spanie", nev:false },
+  { id:"o12", num:12, name:"Žabky / sandále", nev:false },
+  { id:"o13", num:13, name:"1 pár rukavíc", nev:false },
+  { id:"o14", num:14, name:"Nepremokavé návleky", nev:false },
+  { id:"o15", num:15, name:"Nepremokavé nohavice", nev:false },
+  { section: "Osobná výbava" },
+  { id:"o16", num:16, name:"Batoh min. 50 litrov", nev:true },
+  { id:"o17", num:17, name:"Karimatka", nev:true },
+  { id:"o18", num:18, name:"Spacák (komfortná teplota okolo 0°C)", nev:true },
+  { id:"o19", num:19, name:"Píšťalka", nev:true },
+  { id:"o20", num:20, name:"Čelovka / baterka + náhradné batérie alebo powerbanka", nev:true },
+  { id:"o21", num:21, name:"Osobné lieky (ak užívaš)", nev:true },
+  { id:"o22", num:22, name:"Núdzové zásoby jedla (tyčinka, čokoláda...)", nev:true },
+  { id:"o23", num:23, name:"Fľaša/-e na vodu alebo vak (2 litre)", nev:true },
+  { id:"o24", num:24, name:"Náhradné okuliare / kontaktné šošovky (ak nosíš)", nev:true },
+  { id:"o25", num:25, name:"Vreckový nôž, lyžička", nev:false },
+  { id:"o26", num:26, name:"Ešus / miska / hrnček", nev:false },
+  { id:"o27", num:27, name:"Zapaľovač / zápalky (vo vodotesnom obale)", nev:false },
+  { id:"o28", num:28, name:"Opaľovací krém", nev:false },
+  { id:"o29", num:29, name:"Nepremokavý obal na batoh / igelitové vrecia", nev:false },
+  { id:"o30", num:30, name:"Zápisník a ceruzky / perá", nev:false },
+  { id:"o31", num:31, name:"Hodinky", nev:false },
+  { id:"o32", num:32, name:"Osobné hygienické potreby", nev:false },
+  { id:"o33", num:33, name:"Slnečné okuliare", nev:false }
+];
+
+let state = {};
+try { state = JSON.parse(localStorage.getItem('dofe_osobna') || '{}'); } catch(e) { state = {}; }
+
+const fallback = {
+  meno: "",
+  checked: {}
+};
+
+if (!state || typeof state !== 'object') state = {};
+if (state.meno == null) state.meno = fallback.meno;
+if (!state.checked || typeof state.checked !== 'object') state.checked = fallback.checked;
+
+const menoInput = document.getElementById('meno-input');
+menoInput.value = state.meno || '';
+
+function save() {
+  try { localStorage.setItem('dofe_osobna', JSON.stringify(state)); } catch(e) {}
+}
+
+menoInput.addEventListener('input', function() {
+  state.meno = this.value;
+  save();
+});
+
+const container = document.getElementById('items-container');
+const total = items.filter(i => i.id).length;
+
+function rowChecked(id) {
+  return !!state.checked[id];
+}
+
+function toggle(id, cb) {
+  state.checked[id] = cb.checked;
+  const row = document.getElementById('row-' + id);
+  if (row) row.classList.toggle('done', cb.checked);
+  save();
+  updateProgress();
+}
+
+items.forEach(function(item) {
+  if (item.section) {
+    const sec = document.createElement('div');
+    sec.className = 'section-label';
+    sec.textContent = '▸ ' + item.section;
+    container.appendChild(sec);
+    return;
+  }
+
+  const checked = rowChecked(item.id);
+  const div = document.createElement('div');
+  div.className = 'item' + (checked ? ' done' : '');
+  div.id = 'row-' + item.id;
+
+  const dotDiv = document.createElement('div');
+  dotDiv.className = 'dot-row ' + (item.nev ? 'nev' : 'odp');
+
+  const numSpan = document.createElement('span');
+  numSpan.className = 'item-num';
+  numSpan.textContent = item.num;
+
+  const nameSpan = document.createElement('span');
+  nameSpan.className = 'item-name';
+  nameSpan.textContent = item.name;
+
+  const cb = document.createElement('input');
+  cb.type = 'checkbox';
+  cb.checked = checked;
+
+  cb.addEventListener('change', function(e) {
+    e.stopPropagation();
+    toggle(item.id, cb);
+  });
+
+  div.appendChild(dotDiv);
+  div.appendChild(numSpan);
+  div.appendChild(nameSpan);
+  div.appendChild(cb);
+
+  div.addEventListener('click', function(e) {
+    if (e.target === cb) return;
+    cb.checked = !cb.checked;
+    toggle(item.id, cb);
+  });
+
+  container.appendChild(div);
+});
+
+function updateProgress() {
+  const done = items.filter(i => i.id && state.checked[i.id]).length;
+  const pct = Math.round(done / total * 100);
+  document.getElementById('prog-fill').style.width = pct + '%';
+  document.getElementById('prog-txt').textContent = done + ' / ' + total;
+  document.getElementById('done-banner').classList.toggle('show', done === total);
+}
+
+updateProgress();
+</script>
+
+</body>
+</html>
